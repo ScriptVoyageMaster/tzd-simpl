@@ -3,26 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="24dp"
     tools:context="ua.company.tzd.MainActivity">
-
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-        android:textColor="@android:color/black"
-        android:textStyle="bold"
-        tools:text="Barcode Collector" />
 
     <Button
         android:id="@+id/btnScan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         android:contentDescription="@string/btn_scan"
         android:minHeight="48dp"
         tools:text="Scan" />
@@ -31,24 +20,60 @@
         android:id="@+id/btnClear"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:contentDescription="@string/btn_clear"
         android:minHeight="48dp"
         tools:text="Clear" />
 
     <TextView
-        android:id="@+id/tvLastCode"
+        android:id="@+id/summaryHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textStyle="bold"
+        android:text="@string/summary_header"
+        android:visibility="gone"
+        tools:text="Summary" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSummaryByArticle"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone"
+        tools:listitem="@layout/item_summary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/tvGrandTotal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-        tools:text="Last code: —" />
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="Total: 0"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/tvTotal"
+        android:id="@+id/tvEmpty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-        tools:text="Total scanned: 0" />
+        android:textColor="@android:color/darker_gray"
+        android:text="@string/empty_list_message"
+        android:visibility="visible"
+        tools:text="No items yet" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCodes"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        tools:listitem="@layout/item_scanned"
+        tools:visibility="visible" />
 
 </LinearLayout>

@@ -12,8 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         <activity
+            android:name="ua.company.tzd.SettingsActivity"
+            android:exported="false"
+            android:label="@string/settings_title" />
+        <activity
             android:name="ua.company.tzd.MainActivity"
-            android:exported="true">
+            android:exported="false" />
+        <activity
+            android:name="ua.company.tzd.HomeActivity"
+            android:exported="true"
+            android:label="@string/home_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

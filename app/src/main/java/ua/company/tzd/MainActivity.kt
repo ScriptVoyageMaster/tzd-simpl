@@ -4,44 +4,57 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.launch
 import ua.company.tzd.databinding.ActivityMainBinding
+import ua.company.tzd.model.ScannedItem
+import ua.company.tzd.settings.ParserConfig
+import ua.company.tzd.settings.SettingsRepository
+import ua.company.tzd.ui.ScannedAdapter
+import ua.company.tzd.ui.SummaryAdapter
+import ua.company.tzd.util.ParserUtil
+import ua.company.tzd.util.TotalsUtil
 
 /**
- * Головний екран застосунку збирає штрих-коди та показує просту статистику.
- * Докладні коментарі пояснюють кроки для розробників-початківців.
+ * Основний екран для сканування кодів та перегляду поточних підсумків.
+ * Коментарі пояснюють кожен крок, щоб навіть новачок розібрався в логіці.
  */
 class MainActivity : AppCompatActivity() {
 
-    // ViewBinding допомагає легко взаємодіяти з елементами макету без findViewById.
+    // ViewBinding надає доступ до елементів розмітки без пошуку за ідентифікатором.
     private lateinit var binding: ActivityMainBinding
+    // Репозиторій налаштувань зберігає позиції для парсингу та прапорець підтвердження.
+    private lateinit var settingsRepository: SettingsRepository
+    // Основний список усіх відсканованих кодів (нові елементи додаємо на початок).
+    private val scannedItems: MutableList<ScannedItem> = mutableListOf()
+    // Адаптери для двох списків у верхній частині екрана.
+    private val summaryAdapter = SummaryAdapter()
+    private val scannedAdapter = ScannedAdapter { item -> handleDeleteRequest(item) }
+    // Поточна конфігурація парсера зчитується із DataStore й кешується тут.
+    private var parserConfig: ParserConfig = SettingsRepository.DEFAULT_PARSER
+    // Чи потрібно показувати діалог підтвердження під час видалення елемента.
+    private var confirmDelete: Boolean = SettingsRepository.DEFAULT_CONFIRM_DELETE
 
-    // lastCode зберігає останній валідний штрих-код.
-    private var lastCode: String? = null
-
-    // Лічильник totalScanned показує, скільки кодів зчитано за поточну сесію.
-    private var totalScanned: Int = 0
-
-    // ActivityResultLauncher зручно отримує результат зі ScanActivity.
+    // Лончер для запуску ScanActivity та отримання результату.
     private val scanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val code = result.data?.getStringExtra(ScanActivity.EXTRA_BARCODE)
-            if (!code.isNullOrEmpty() && isValidEan13(code)) {
-                // Приймаємо лише валідний EAN-13 та оновлюємо статистику.
-                lastCode = code
-                totalScanned += 1
-                updateUi()
+            if (!code.isNullOrEmpty()) {
+                processScannedCode(code)
             } else {
-                // Повідомляємо користувача про помилку, якщо код некоректний.
                 Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // Лончер для запиту дозволу на камеру.
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
             openScanner()
@@ -52,83 +65,151 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Ініціалізуємо binding, щоб отримати доступ до розмітки activity_main.xml.
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Заповнюємо початкові значення текстових полів.
-        binding.tvTitle.text = getString(R.string.title_main)
-        updateUi()
+        settingsRepository = SettingsRepository(applicationContext)
 
-        // Кнопка "Сканувати" відкриває ScanActivity після перевірки дозволів.
+        // Налаштовуємо списки та одразу показуємо стан «порожньо».
+        setupRecyclerViews()
+        // Читаємо налаштування з DataStore та реагуємо на їх зміни у реальному часі.
+        observeSettings()
+
+        // Кнопка «Сканувати» запускає типовий процес з перевіркою дозволу.
         binding.btnScan.setOnClickListener {
             startScanFlow()
         }
-
-        // Кнопка "Очистити" скидає лічильники та текст.
+        // Кнопка «Очистити» пропонує підтвердити повне очищення списку.
         binding.btnClear.setOnClickListener {
-            resetCounters()
+            showClearAllDialog()
         }
     }
 
     private fun startScanFlow() {
-        // Перевіряємо, чи вже є дозвіл на камеру.
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                // Якщо дозвіл уже надано, просто відкриваємо сканер.
                 openScanner()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
-                // Пояснюємо причину та одразу запитуємо дозвіл.
+                // Пояснюємо користувачу, навіщо дозвіл, і повторюємо запит.
                 Toast.makeText(this, R.string.permission_camera_rationale, Toast.LENGTH_LONG).show()
                 permissionLauncher.launch(Manifest.permission.CAMERA)
             }
             else -> {
-                // Запитуємо дозвіл без додаткових пояснень.
+                // Вперше запитуємо дозвіл без попередніх пояснень.
                 permissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
     }
 
     private fun openScanner() {
-        // Формуємо Intent для запуску ScanActivity та очікуємо результат.
         val intent = Intent(this, ScanActivity::class.java)
         scanLauncher.launch(intent)
     }
 
-    private fun resetCounters() {
-        // Обнуляємо збережені дані та оновлюємо інтерфейс.
-        lastCode = null
-        totalScanned = 0
-        updateUi()
+    private fun setupRecyclerViews() {
+        // Горизонтальні списки не потрібні, тому обираємо звичайний LinearLayoutManager.
+        binding.rvSummaryByArticle.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = summaryAdapter
+        }
+        binding.rvCodes.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = scannedAdapter
+        }
+        binding.tvGrandTotal.text = getString(R.string.grand_total_fmt, 0, 0, 0)
+        updateEmptyState()
     }
 
-    private fun updateUi() {
-        // Показуємо останній код або дефіс, якщо ще нічого не відскановано.
-        val lastCodeText = lastCode ?: "—"
-        binding.tvLastCode.text = "${getString(R.string.label_last_code)} $lastCodeText"
-
-        // Відображаємо кількість успішних зчитувань.
-        binding.tvTotal.text = "${getString(R.string.label_total_scanned)} $totalScanned"
+    private fun observeSettings() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                settingsRepository.settingsFlow.collect { state ->
+                    // Оновлюємо локальні змінні, щоб у потрібний момент застосувати нові параметри.
+                    parserConfig = state.parserConfig
+                    confirmDelete = state.confirmDelete
+                }
+            }
+        }
     }
 
-    private fun isValidEan13(code: String): Boolean {
-        // Перевіряємо довжину та що всі символи є цифрами.
-        if (code.length != 13 || code.any { !it.isDigit() }) {
-            return false
+    private fun processScannedCode(code: String) {
+        try {
+            // Використовуємо налаштування користувача для розрізання коду на артикул та вагу.
+            val (article, kg, g) = ParserUtil.extractArticleKgG(code, parserConfig)
+            val item = ScannedItem(
+                code = code,
+                article = article,
+                kg = kg,
+                g = g,
+                time = System.currentTimeMillis()
+            )
+            // Новий запис розміщуємо на початку списку.
+            scannedItems.add(0, item)
+            scannedAdapter.submitList(scannedItems.toList())
+            binding.rvCodes.scrollToPosition(0)
+            recalculateSummary()
+        } catch (ex: IllegalArgumentException) {
+            Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
         }
+    }
 
-        // Конвертуємо символи у список цифр для математичних обчислень.
-        val digits = code.map { it.digitToInt() }
+    private fun recalculateSummary() {
+        // Групуємо коди за артикулом та одразу нормалізуємо вагу.
+        val summary = TotalsUtil.groupByArticle(scannedItems)
+        summaryAdapter.submitList(summary)
+        val (kg, g) = TotalsUtil.calcGrandTotal(summary)
+        val totalCount = scannedItems.size
+        binding.tvGrandTotal.text = getString(R.string.grand_total_fmt, totalCount, kg, g)
+        updateEmptyState()
+    }
 
-        // Рахуємо суму за правилами EAN-13: парні позиції множимо на 3.
-        var sum = 0
-        for (index in 0 until 12) {
-            val digit = digits[index]
-            sum += if ((index + 1) % 2 == 0) digit * 3 else digit
+    private fun updateEmptyState() {
+        val hasItems = scannedItems.isNotEmpty()
+        binding.summaryHeader.visibility = if (hasItems) View.VISIBLE else View.GONE
+        binding.rvSummaryByArticle.visibility = if (hasItems) View.VISIBLE else View.GONE
+        binding.tvGrandTotal.visibility = if (hasItems) View.VISIBLE else View.GONE
+        binding.rvCodes.visibility = if (hasItems) View.VISIBLE else View.GONE
+        binding.tvEmpty.visibility = if (hasItems) View.GONE else View.VISIBLE
+    }
+
+    private fun handleDeleteRequest(item: ScannedItem) {
+        if (confirmDelete) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.delete_item_title)
+                .setMessage(getString(R.string.delete_item_msg, item.code))
+                .setPositiveButton(R.string.action_delete) { _, _ ->
+                    removeItem(item)
+                }
+                .setNegativeButton(R.string.action_cancel, null)
+                .show()
+        } else {
+            removeItem(item)
         }
+    }
 
-        // Обчислюємо контрольну цифру й порівнюємо з останньою.
-        val checkDigit = (10 - (sum % 10)) % 10
-        return checkDigit == digits[12]
+    private fun removeItem(item: ScannedItem) {
+        // Видаляємо запис і оновлюємо статистику. Метод submitList створює копію, щоб adapter оновився.
+        scannedItems.remove(item)
+        scannedAdapter.submitList(scannedItems.toList())
+        recalculateSummary()
+    }
+
+    private fun showClearAllDialog() {
+        if (scannedItems.isEmpty()) {
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.clear_all_title)
+            .setMessage(R.string.clear_all_msg)
+            .setPositiveButton(R.string.action_delete) { _, _ ->
+                // Після підтвердження повністю очищаємо список та оновлюємо інтерфейс.
+                scannedItems.clear()
+                scannedAdapter.submitList(scannedItems.toList())
+                recalculateSummary()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 }
