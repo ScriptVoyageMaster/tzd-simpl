@@ -1,2 +1,14 @@
+// Додаємо секцію pluginManagement, щоб вказати Gradle де шукати плагіни Android та уникнути помилок під час збірки.
+pluginManagement {
+    repositories {
+        // Репозиторій Google містить офіційні артефакти Android, включно з плагінами Gradle.
+        google()
+        // Maven Central містить велику кількість бібліотек та резервно використовується для плагінів.
+        mavenCentral()
+        // Gradle Plugin Portal забезпечує доступ до плагінів спільноти, що не публікуються в інших репозиторіях.
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "TZD-simple"
 include(":app")
