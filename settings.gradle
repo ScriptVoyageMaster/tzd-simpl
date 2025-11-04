@@ -1,0 +1,2 @@
+rootProject.name = "TZD-simple"
+include(":app")
