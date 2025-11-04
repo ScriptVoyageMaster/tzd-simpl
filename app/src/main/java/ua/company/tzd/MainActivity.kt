@@ -198,6 +198,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showClearAllDialog() {
         if (scannedItems.isEmpty()) {
+            // Якщо список і так порожній, не показуємо діалог і просто завершуємо метод.
             return
         }
         AlertDialog.Builder(this)

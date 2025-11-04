@@ -19,7 +19,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="clear_all_title">Clear list</string>
-    <string name="clear_all_msg">Remove all scanned codes?</string>
+    <string name="clear_all_msg">Are you sure you want to delete all scanned items?</string>
 
     <!-- Settings -->
     <string name="settings_title">Parser settings</string>

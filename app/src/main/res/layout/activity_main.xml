@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
+        android:text="@string/btn_scan"
         android:contentDescription="@string/btn_scan"
         android:minHeight="48dp"
         tools:text="Scan" />
@@ -21,6 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
+        android:text="@string/btn_clear"
         android:contentDescription="@string/btn_clear"
         android:minHeight="48dp"
         tools:text="Clear" />
