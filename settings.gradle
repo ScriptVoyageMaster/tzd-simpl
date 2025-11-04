@@ -10,5 +10,17 @@ pluginManagement {
     }
 }
 
+// Налаштовуємо централізоване резольвлення залежностей, щоб усі модулі користувалися однаковими репозиторіями і Gradle не шукав артефакти в кожному модулі окремо.
+dependencyResolutionManagement {
+    // Вказуємо, що модулі не повинні оголошувати власні репозиторії, щоб уникнути розбіжностей та випадкових помилок конфігурації.
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        // Репозиторій Google містить більшість Android-залежностей, необхідних для проєкту.
+        google()
+        // Maven Central служить додатковим джерелом бібліотек з відкритим кодом.
+        mavenCentral()
+    }
+}
+
 rootProject.name = "TZD-simple"
 include(":app")
