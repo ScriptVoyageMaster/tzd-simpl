@@ -19,7 +19,7 @@
     <string name="action_delete">Видалити</string>
     <string name="action_cancel">Скасувати</string>
     <string name="clear_all_title">Очистити список</string>
-    <string name="clear_all_msg">Видалити всі відскановані коди?</string>
+    <string name="clear_all_msg">Ви дійсно бажаєте видалити всі відскановані позиції?</string>
 
     <!-- Settings -->
     <string name="settings_title">Налаштування парсера</string>
