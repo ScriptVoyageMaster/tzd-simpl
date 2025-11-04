@@ -1,11 +1,14 @@
 package ua.company.tzd
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import ua.company.tzd.databinding.ActivitySettingsBinding
@@ -21,6 +24,9 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var repository: SettingsRepository
+    private val currentPrefixes: MutableList<String> = mutableListOf()
+    private val prefixComparator = compareBy<String> { it.length }.thenBy { it }
+    private val prefixRegex = Regex("\\d{1,13}")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +42,13 @@ class SettingsActivity : AppCompatActivity() {
             binding.tilKgStart,
             binding.tilKgLength,
             binding.tilGStart,
-            binding.tilGLength
+            binding.tilGLength,
+            binding.tilPrefix
         ).forEach { layout ->
             layout.editText?.addTextChangedListener { layout.error = null }
         }
 
+        setupPrefixSection()
         observeSettings()
         setupButtons()
     }
@@ -52,7 +60,7 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 repository.settingsFlow.collect { state ->
-                    updateUi(state.parserConfig, state.confirmDelete)
+                    updateUi(state.parserConfig, state.confirmDelete, state.allowedPrefixes)
                 }
             }
         }
@@ -70,9 +78,20 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
+     * Готуємо блок роботи з префіксами: додавання, очищення помилок та обробку натискань.
+     */
+    private fun setupPrefixSection() {
+        binding.btnAddPrefix.setOnClickListener { addPrefixFromInput() }
+        binding.tilPrefix.editText?.setOnEditorActionListener { _, _, _ ->
+            addPrefixFromInput()
+            true
+        }
+    }
+
+    /**
      * Заповнюємо інтерфейс значеннями, що прийшли з репозиторію.
      */
-    private fun updateUi(config: ParserConfig, confirmDelete: Boolean) {
+    private fun updateUi(config: ParserConfig, confirmDelete: Boolean, prefixes: Set<String>) {
         // Щоб не переривати введення користувача, оновлюємо поле лише коли воно не в фокусі.
         updateField(binding.tilArticleStart, config.articleStart)
         updateField(binding.tilArticleLength, config.articleLength)
@@ -81,6 +100,8 @@ class SettingsActivity : AppCompatActivity() {
         updateField(binding.tilGStart, config.gStart)
         updateField(binding.tilGLength, config.gLength)
         binding.swConfirmDelete.isChecked = confirmDelete
+        renderPrefixes(prefixes)
+        binding.tvTestPrefixMessage.visibility = View.GONE
     }
 
     private fun updateField(layout: TextInputLayout, value: Int) {
@@ -91,6 +112,76 @@ class SettingsActivity : AppCompatActivity() {
                 edit.setText(newText)
             }
         }
+    }
+
+    /**
+     * Оновлюємо розділ з префіксами після отримання даних із DataStore.
+     */
+    private fun renderPrefixes(prefixes: Set<String>) {
+        currentPrefixes.clear()
+        currentPrefixes.addAll(prefixes.sortedWith(prefixComparator))
+        refreshPrefixChips()
+        binding.tilPrefix.error = null
+        binding.etPrefix.text?.clear()
+    }
+
+    /**
+     * Створюємо чіпи для кожного префікса та показуємо інформаційне повідомлення, якщо список порожній.
+     */
+    private fun refreshPrefixChips() {
+        binding.chipGroupPrefixes.removeAllViews()
+        currentPrefixes.forEach { prefix ->
+            binding.chipGroupPrefixes.addView(createPrefixChip(prefix))
+        }
+        binding.tvPrefixesEmpty.visibility = if (currentPrefixes.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Формуємо чіп із префіксом та навішуємо обробники на торкання та іконку видалення.
+     */
+    private fun createPrefixChip(prefix: String): Chip {
+        return Chip(this).apply {
+            text = prefix
+            isCloseIconVisible = true
+            isCheckable = false
+            setOnCloseIconClickListener { confirmRemovePrefix(prefix) }
+            setOnClickListener { confirmRemovePrefix(prefix) }
+        }
+    }
+
+    /**
+     * Після підтвердження видаляємо префікс зі списку й оновлюємо чіпи на екрані.
+     */
+    private fun confirmRemovePrefix(prefix: String) {
+        AlertDialog.Builder(this)
+            .setMessage(getString(R.string.settings_prefix_remove, prefix))
+            .setPositiveButton(R.string.action_delete) { _, _ ->
+                currentPrefixes.remove(prefix)
+                refreshPrefixChips()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    /**
+     * Зчитуємо введене значення, нормалізуємо його та додаємо до списку, якщо пройшло валідацію.
+     */
+    private fun addPrefixFromInput() {
+        val raw = binding.etPrefix.text?.toString().orEmpty()
+        val compact = raw.filterNot { it.isWhitespace() }
+        if (compact.isEmpty() || !compact.matches(prefixRegex)) {
+            binding.tilPrefix.error = getString(R.string.settings_prefix_invalid)
+            return
+        }
+        if (currentPrefixes.contains(compact)) {
+            binding.tilPrefix.error = getString(R.string.settings_prefix_exists)
+            return
+        }
+        currentPrefixes.add(compact)
+        currentPrefixes.sortWith(prefixComparator)
+        binding.etPrefix.text?.clear()
+        binding.tilPrefix.error = null
+        refreshPrefixChips()
     }
 
     /**
@@ -123,7 +214,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            repository.saveSettings(config, binding.swConfirmDelete.isChecked)
+            repository.saveSettings(config, binding.swConfirmDelete.isChecked, currentPrefixes.toSet())
             Toast.makeText(this@SettingsActivity, R.string.saved_ok, Toast.LENGTH_SHORT).show()
         }
     }
@@ -154,8 +245,10 @@ class SettingsActivity : AppCompatActivity() {
             binding.tilKgStart,
             binding.tilKgLength,
             binding.tilGStart,
-            binding.tilGLength
+            binding.tilGLength,
+            binding.tilPrefix
         ).forEach { it.error = null }
+        binding.tvTestPrefixMessage.visibility = View.GONE
     }
 
     /**
@@ -211,6 +304,16 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.test_code_empty, Toast.LENGTH_SHORT).show()
             return
         }
+        if (!ParserUtil.isValidEan13(code)) {
+            Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isCodeAllowedByPrefixes(code)) {
+            val sorted = currentPrefixes.sortedWith(prefixComparator)
+            binding.tvTestPrefixMessage.text = getString(R.string.settings_prefix_not_allowed, code, sorted.joinToString(", "))
+            binding.tvTestPrefixMessage.visibility = View.VISIBLE
+            return
+        }
         try {
             val (article, kg, g) = ParserUtil.extractArticleKgG(code, config)
             val message = getString(R.string.test_code_result_fmt, article, kg, g)
@@ -218,6 +321,16 @@ class SettingsActivity : AppCompatActivity() {
         } catch (ex: IllegalArgumentException) {
             Toast.makeText(this, getString(R.string.test_code_error, ex.message), Toast.LENGTH_LONG).show()
         }
+    }
+
+    /**
+     * Перевіряємо фільтр префіксів для тестового коду: порожній список означає «дозволити все».
+     */
+    private fun isCodeAllowedByPrefixes(code: String): Boolean {
+        if (currentPrefixes.isEmpty()) {
+            return true
+        }
+        return currentPrefixes.any { prefix -> code.startsWith(prefix) }
     }
 
     /**

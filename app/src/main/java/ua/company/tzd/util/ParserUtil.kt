@@ -19,10 +19,7 @@ object ParserUtil {
 
         // Обчислюємо контрольну цифру та переконуємося, що код справді валідний.
         val digits = code.map { it.digitToInt() }
-        val sum = digits.take(12).mapIndexed { index, digit ->
-            if ((index + 1) % 2 == 0) digit * 3 else digit
-        }.sum()
-        val expectedCheckDigit = (10 - (sum % 10)) % 10
+        val expectedCheckDigit = calculateCheckDigit(digits)
         if (expectedCheckDigit != digits[12]) {
             throw IllegalArgumentException("EAN-13 check digit mismatch")
         }
@@ -51,11 +48,33 @@ object ParserUtil {
     }
 
     /**
+     * Швидко перевіряємо штрих-код без розрізання: корисно для попередньої валідації у UI.
+     */
+    fun isValidEan13(code: String): Boolean {
+        if (code.length != 13 || code.any { !it.isDigit() }) {
+            return false
+        }
+        val digits = code.map { it.digitToInt() }
+        val expectedCheckDigit = calculateCheckDigit(digits)
+        return expectedCheckDigit == digits[12]
+    }
+
+    /**
      * Допоміжна функція для роботи з 1-індексацією (start = 1 означає перший символ).
      */
     private fun String.sliceSubstring(startOneBased: Int, length: Int): String {
         val startIndex = startOneBased - 1
         val endIndexExclusive = startIndex + length
         return substring(startIndex, endIndexExclusive)
+    }
+
+    /**
+     * Виділяємо формулу підрахунку контрольної цифри в окремий метод для повторного використання.
+     */
+    private fun calculateCheckDigit(digits: List<Int>): Int {
+        val sum = digits.take(12).mapIndexed { index, digit ->
+            if ((index + 1) % 2 == 0) digit * 3 else digit
+        }.sum()
+        return (10 - (sum % 10)) % 10
     }
 }

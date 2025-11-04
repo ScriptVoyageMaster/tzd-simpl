@@ -24,6 +24,14 @@
     <!-- Settings -->
     <string name="settings_title">Налаштування парсера</string>
     <string name="settings_parser_section">Парсер EAN-13</string>
+    <string name="settings_prefixes_section">Дозволені префікси</string>
+    <string name="settings_prefix_hint">Введіть префікс (1–13 цифр)</string>
+    <string name="settings_prefix_add">Додати</string>
+    <string name="settings_prefix_empty">Префікси не задані — дозволено будь-який EAN-13</string>
+    <string name="settings_prefix_exists">Такий префікс уже додано</string>
+    <string name="settings_prefix_invalid">Префікс має містити лише 1–13 цифр</string>
+    <string name="settings_prefix_remove">Видалити префікс %1$s?</string>
+    <string name="settings_prefix_not_allowed">Код %1$s не починається з дозволених префіксів: %2$s</string>
     <string name="field_start">Початок</string>
     <string name="field_length">Довжина</string>
     <string name="field_article">Артикул</string>
@@ -49,4 +57,7 @@
     <string name="permission_camera_rationale">Потрібен дозвіл на камеру для сканування штрих-кодів.</string>
     <string name="error_no_barcode">Некоректний штрих-код</string>
     <string name="error_permission_denied">Дозвіл на камеру відхилено</string>
+    <string name="invalid_prefix_title">Невірний префікс</string>
+    <string name="invalid_prefix_msg">Код %1$s не починається з дозволених префіксів: %2$s</string>
+    <string name="action_rescan">Сканувати ще раз</string>
 </resources>
