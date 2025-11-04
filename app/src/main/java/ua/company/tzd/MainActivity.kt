@@ -42,6 +42,10 @@ class MainActivity : AppCompatActivity() {
     private var parserConfig: ParserConfig = SettingsRepository.DEFAULT_PARSER
     // Чи потрібно показувати діалог підтвердження під час видалення елемента.
     private var confirmDelete: Boolean = SettingsRepository.DEFAULT_CONFIRM_DELETE
+    // Перелік дозволених префіксів для фільтрації кодів: порожній набір означає «пропускати все».
+    private var allowedPrefixes: Set<String> = SettingsRepository.DEFAULT_ALLOWED_PREFIXES
+    // Компаратор допоможе показувати короткі префікси першими, щоб оператор бачив загальні фільтри.
+    private val prefixComparator = compareBy<String> { it.length }.thenBy { it }
 
     // Лончер для запуску ScanActivity та отримання результату.
     private val scanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -129,12 +133,25 @@ class MainActivity : AppCompatActivity() {
                     // Оновлюємо локальні змінні, щоб у потрібний момент застосувати нові параметри.
                     parserConfig = state.parserConfig
                     confirmDelete = state.confirmDelete
+                    allowedPrefixes = state.allowedPrefixes
                 }
             }
         }
     }
 
     private fun processScannedCode(code: String) {
+        // Перевіряємо валідність EAN-13, щоб миттєво відсікти випадкові або пошкоджені штрих-коди.
+        if (!ParserUtil.isValidEan13(code)) {
+            Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Якщо список префіксів не порожній, вимагаємо, щоб код починався хоча б з одного значення.
+        if (!isCodeAllowedByPrefixes(code)) {
+            showInvalidPrefixDialog(code)
+            return
+        }
+
         try {
             // Використовуємо налаштування користувача для розрізання коду на артикул та вагу.
             val (article, kg, g) = ParserUtil.extractArticleKgG(code, parserConfig)
@@ -153,6 +170,31 @@ class MainActivity : AppCompatActivity() {
         } catch (ex: IllegalArgumentException) {
             Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /**
+     * Діалог пояснює, чому код не пройшов фільтр, і дає змогу одразу повторити сканування.
+     */
+    private fun showInvalidPrefixDialog(code: String) {
+        val sorted = allowedPrefixes.toList().sortedWith(prefixComparator)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.invalid_prefix_title)
+            .setMessage(getString(R.string.invalid_prefix_msg, code, sorted.joinToString(", ")))
+            .setPositiveButton(R.string.action_rescan) { _, _ ->
+                openScanner()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    /**
+     * Порожній набір означає, що фільтр вимкнено; інакше шукаємо збіг за startsWith().
+     */
+    private fun isCodeAllowedByPrefixes(code: String): Boolean {
+        if (allowedPrefixes.isEmpty()) {
+            return true
+        }
+        return allowedPrefixes.any { prefix -> code.startsWith(prefix) }
     }
 
     private fun recalculateSummary() {

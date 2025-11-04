@@ -24,6 +24,14 @@
     <!-- Settings -->
     <string name="settings_title">Parser settings</string>
     <string name="settings_parser_section">EAN-13 parser</string>
+    <string name="settings_prefixes_section">Allowed prefixes</string>
+    <string name="settings_prefix_hint">Enter prefix (1–13 digits)</string>
+    <string name="settings_prefix_add">Add</string>
+    <string name="settings_prefix_empty">No prefixes set — any EAN-13 is allowed</string>
+    <string name="settings_prefix_exists">This prefix is already added</string>
+    <string name="settings_prefix_invalid">Prefix must contain 1–13 digits only</string>
+    <string name="settings_prefix_remove">Remove prefix %1$s?</string>
+    <string name="settings_prefix_not_allowed">Code %1$s does not start with any allowed prefix: %2$s</string>
     <string name="field_start">Start</string>
     <string name="field_length">Length</string>
     <string name="field_article">Article</string>
@@ -49,4 +57,7 @@
     <string name="permission_camera_rationale">Camera permission is needed to scan barcodes.</string>
     <string name="error_no_barcode">Invalid barcode</string>
     <string name="error_permission_denied">Camera permission denied</string>
+    <string name="invalid_prefix_title">Invalid prefix</string>
+    <string name="invalid_prefix_msg">Code %1$s does not start with any allowed prefix: %2$s</string>
+    <string name="action_rescan">Rescan</string>
 </resources>

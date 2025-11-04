@@ -5,10 +5,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import java.io.IOException
 
 /**
@@ -28,6 +30,8 @@ class SettingsRepository(private val context: Context) {
         private val KEY_G_START = intPreferencesKey("parser.g.start")
         private val KEY_G_LENGTH = intPreferencesKey("parser.g.length")
         private val KEY_CONFIRM_DELETE = booleanPreferencesKey("ui.confirm_delete")
+        private val KEY_ALLOWED_PREFIXES = stringSetPreferencesKey("parser.allowed_prefixes")
+        private val PREFIX_REGEX = Regex("\\d{1,13}")
 
         // Значення за замовчуванням відповідають наданим вимогам.
         val DEFAULT_PARSER = ParserConfig(
@@ -39,6 +43,7 @@ class SettingsRepository(private val context: Context) {
             gLength = 3
         )
         const val DEFAULT_CONFIRM_DELETE = true
+        val DEFAULT_ALLOWED_PREFIXES: Set<String> = emptySet()
     }
 
     /**
@@ -58,7 +63,7 @@ class SettingsRepository(private val context: Context) {
     /**
      * Зберігаємо у DataStore одразу весь набір параметрів.
      */
-    suspend fun saveSettings(config: ParserConfig, confirmDelete: Boolean) {
+    suspend fun saveSettings(config: ParserConfig, confirmDelete: Boolean, allowedPrefixes: Set<String>) {
         context.settingsDataStore.edit { prefs ->
             prefs[KEY_ARTICLE_START] = config.articleStart
             prefs[KEY_ARTICLE_LENGTH] = config.articleLength
@@ -67,6 +72,7 @@ class SettingsRepository(private val context: Context) {
             prefs[KEY_G_START] = config.gStart
             prefs[KEY_G_LENGTH] = config.gLength
             prefs[KEY_CONFIRM_DELETE] = confirmDelete
+            prefs[KEY_ALLOWED_PREFIXES] = normalizePrefixes(allowedPrefixes)
         }
     }
 
@@ -74,7 +80,24 @@ class SettingsRepository(private val context: Context) {
      * Повертаємося до заводських налаштувань, коли користувач натискає кнопку скидання.
      */
     suspend fun resetDefaults() {
-        saveSettings(DEFAULT_PARSER, DEFAULT_CONFIRM_DELETE)
+        saveSettings(DEFAULT_PARSER, DEFAULT_CONFIRM_DELETE, DEFAULT_ALLOWED_PREFIXES)
+    }
+
+    /**
+     * Повертаємо актуальний набір дозволених префіксів, очищаючи значення від пробілів і сміття.
+     */
+    suspend fun getAllowedPrefixes(): Set<String> {
+        val raw = context.settingsDataStore.data.first()[KEY_ALLOWED_PREFIXES] ?: DEFAULT_ALLOWED_PREFIXES
+        return normalizePrefixes(raw)
+    }
+
+    /**
+     * Зберігаємо лише чистий набір префіксів, щоб у сховищі не лишалося невалідних записів.
+     */
+    suspend fun saveAllowedPrefixes(prefixes: Set<String>) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[KEY_ALLOWED_PREFIXES] = normalizePrefixes(prefixes)
+        }
     }
 
     /**
@@ -93,8 +116,9 @@ class SettingsRepository(private val context: Context) {
         }
 
         val confirmDelete = get(KEY_CONFIRM_DELETE) ?: DEFAULT_CONFIRM_DELETE
+        val prefixes = normalizePrefixes(get(KEY_ALLOWED_PREFIXES) ?: DEFAULT_ALLOWED_PREFIXES)
 
-        return SettingsState(parser, confirmDelete)
+        return SettingsState(parser, confirmDelete, prefixes)
     }
 
     /**
@@ -102,8 +126,22 @@ class SettingsRepository(private val context: Context) {
      */
     data class SettingsState(
         val parserConfig: ParserConfig,
-        val confirmDelete: Boolean
+        val confirmDelete: Boolean,
+        val allowedPrefixes: Set<String>
     )
+
+    /**
+     * Приватний хелпер прибирає пробіли, дублікати та пропускає все, що не підпадає під шаблон 1–13 цифр.
+     */
+    private fun normalizePrefixes(raw: Set<String>): Set<String> {
+        val cleaned = raw.mapNotNull { prefix ->
+            val compact = prefix.filterNot { it.isWhitespace() }
+            if (compact.isEmpty()) return@mapNotNull null
+            if (!compact.matches(PREFIX_REGEX)) return@mapNotNull null
+            compact
+        }.sortedWith(compareBy<String> { it.length }.thenBy { it })
+        return LinkedHashSet(cleaned)
+    }
 }
 
 /**
