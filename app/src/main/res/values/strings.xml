@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TZD Simple</string>
+    <string name="title_main">Barcode Collector</string>
+    <string name="btn_scan">Scan</string>
+    <string name="btn_clear">Clear</string>
+    <string name="label_last_code">Last code:</string>
+    <string name="label_total_scanned">Total scanned:</string>
+    <string name="hint_hold_steady">Hold steady 15–25 cm from the code.</string>
+    <string name="torch_on">Torch ON</string>
+    <string name="torch_off">Torch OFF</string>
+    <string name="permission_camera_rationale">Camera permission is needed to scan barcodes.</string>
+    <string name="error_no_barcode">No barcode found</string>
+    <string name="error_permission_denied">Camera permission denied</string>
+</resources>

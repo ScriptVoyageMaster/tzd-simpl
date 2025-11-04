@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TZD Simple</string>
+    <string name="title_main">Збір штрих-кодів</string>
+    <string name="btn_scan">Сканувати</string>
+    <string name="btn_clear">Очистити</string>
+    <string name="label_last_code">Останній код:</string>
+    <string name="label_total_scanned">Всього зчитано:</string>
+    <string name="hint_hold_steady">Тримайте код на відстані 15–25 см.</string>
+    <string name="torch_on">Ліхтарик УВІМК.</string>
+    <string name="torch_off">Ліхтарик ВИМК.</string>
+    <string name="permission_camera_rationale">Дозвіл на камеру потрібен для сканування штрих-кодів.</string>
+    <string name="error_no_barcode">Штрих-код не знайдено</string>
+    <string name="error_permission_denied">Відхилено дозвіл на камеру</string>
+</resources>
