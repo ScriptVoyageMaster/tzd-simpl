@@ -16,6 +16,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="24dp"
-        android:text="@string/placeholder_wip"
+        android:text="@string/placeholder_wip_message"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 </LinearLayout>

@@ -21,5 +21,11 @@ class ProductsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setTitle(ua.company.tzd.R.string.products_title)
         binding.toolbar.setNavigationOnClickListener { finish() }
+
+        // Формуємо текст заглушки через форматований ресурс, щоб уникнути повторення рядків і проблем з плейсхолдером.
+        binding.tvPlaceholder.text = getString(
+            ua.company.tzd.R.string.placeholder_wip,
+            getString(ua.company.tzd.R.string.placeholder_wip_message)
+        )
     }
 }

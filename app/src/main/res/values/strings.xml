@@ -9,7 +9,8 @@
     <string name="home_settings">Settings</string>
 
     <!-- Placeholder -->
-    <string name="placeholder_wip">Work in progress. The full functionality will appear soon.</string>
+    <string name="placeholder_wip">%1$s</string>
+    <string name="placeholder_wip_message">Work in progress. The full functionality will appear soon.</string>
 
     <!-- Scan lists -->
     <string name="scan_lists_title">Scan lists</string>
