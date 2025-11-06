@@ -21,5 +21,11 @@ class ScanListsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setTitle(ua.company.tzd.R.string.scan_lists_title)
         binding.toolbar.setNavigationOnClickListener { finish() }
+
+        // Оновлюємо заглушку через форматований рядок, щоби прибрати помилку з {str} та зберегти читабельний текст.
+        binding.tvPlaceholder.text = getString(
+            ua.company.tzd.R.string.placeholder_wip,
+            getString(ua.company.tzd.R.string.placeholder_wip_message)
+        )
     }
 }

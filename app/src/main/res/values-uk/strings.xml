@@ -9,7 +9,8 @@
     <string name="home_settings">Налаштування</string>
 
     <!-- Placeholder -->
-    <string name="placeholder_wip">Розділ у розробці. Повний функціонал з'явиться найближчим часом.</string>
+    <string name="placeholder_wip">%1$s</string>
+    <string name="placeholder_wip_message">Розділ у розробці. Повний функціонал з'явиться найближчим часом.</string>
 
     <!-- Scan lists -->
     <string name="scan_lists_title">Списки сканування</string>

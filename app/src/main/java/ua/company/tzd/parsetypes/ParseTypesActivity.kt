@@ -21,5 +21,11 @@ class ParseTypesActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setTitle(ua.company.tzd.R.string.parse_types_title)
         binding.toolbar.setNavigationOnClickListener { finish() }
+
+        // Виводимо текст заглушки через форматований ресурс, щоб плейсхолдер працював без помилок побудови.
+        binding.tvPlaceholder.text = getString(
+            ua.company.tzd.R.string.placeholder_wip,
+            getString(ua.company.tzd.R.string.placeholder_wip_message)
+        )
     }
 }
