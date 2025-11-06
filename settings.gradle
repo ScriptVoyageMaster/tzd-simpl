@@ -1,11 +1,3 @@
-// Підключаємо плагін автоматичного підбору JDK через сервіс Foojay, щоб Gradle міг самостійно завантажити повноцінний JDK із підтримкою
-// компілятора javac, навіть якщо в системі користувача налаштовано лише JRE. Це усуває помилки на кшталт
-// "Toolchain installation ... does not provide the required capabilities: [JAVA_COMPILER]".
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
-}
-
-// Додаємо секцію pluginManagement, щоб вказати Gradle де шукати плагіни Android та уникнути помилок під час збірки.
 pluginManagement {
     repositories {
         // Репозиторій Google містить офіційні артефакти Android, включно з плагінами Gradle.
@@ -15,6 +7,13 @@ pluginManagement {
         // Gradle Plugin Portal забезпечує доступ до плагінів спільноти, що не публікуються в інших репозиторіях.
         gradlePluginPortal()
     }
+}
+
+// Підключаємо плагін автоматичного підбору JDK через сервіс Foojay, щоб Gradle міг самостійно завантажити повноцінний JDK із підтримкою
+// компілятора javac, навіть якщо в системі користувача налаштовано лише JRE. Це усуває помилки на кшталт
+// "Toolchain installation ... does not provide the required capabilities: [JAVA_COMPILER]".
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
 // Налаштовуємо централізоване резольвлення залежностей, щоб усі модулі користувалися однаковими репозиторіями і Gradle не шукав артефакти в кожному модулі окремо.
