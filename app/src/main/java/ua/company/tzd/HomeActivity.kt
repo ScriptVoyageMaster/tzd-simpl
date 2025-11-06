@@ -7,6 +7,7 @@ import ua.company.tzd.databinding.ActivityHomeBinding
 import ua.company.tzd.lists.ScanListsActivity
 import ua.company.tzd.parsetypes.ParseTypesActivity
 import ua.company.tzd.products.ProductsActivity
+import ua.company.tzd.settings.UiSettingsManager
 
 /**
  * Оновлене головне меню з чотирма розділами: списки, товари, види парсингу та налаштування.
@@ -14,8 +15,12 @@ import ua.company.tzd.products.ProductsActivity
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
+    private val uiSettingsManager: UiSettingsManager by lazy { (application as TzdApp).uiSettingsManager }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Гарантуємо, що тема та мова застосовані ще до створення інтерфейсу.
+        uiSettingsManager.ensureInitialized()
+
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)

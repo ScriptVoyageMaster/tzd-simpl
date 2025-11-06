@@ -1,9 +1,7 @@
 package ua.company.tzd
 
-import android.content.res.Configuration
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
@@ -12,7 +10,7 @@ import ua.company.tzd.settings.AppLanguage
 import ua.company.tzd.settings.AppTheme
 import ua.company.tzd.settings.SettingsRepository
 import ua.company.tzd.settings.UiSettings
-import java.util.Locale
+import ua.company.tzd.settings.UiSettingsManager
 
 /**
  * Новий екран "Налаштування" дозволяє змінити мову інтерфейсу та тему застосунку.
@@ -22,10 +20,14 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var repository: SettingsRepository
+    private val uiSettingsManager: UiSettingsManager by lazy { (application as TzdApp).uiSettingsManager }
     private var currentSettings: UiSettings = UiSettings(AppLanguage.UK, AppTheme.LIGHT)
     private var applyingUiState = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Перед створенням інтерфейсу переконуємося, що глобальні налаштування вже застосовані.
+        uiSettingsManager.ensureInitialized()
+
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -117,33 +119,21 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
-     * Застосовуємо тему через стандартний AppCompatDelegate.
+     * Застосовуємо тему через спільний менеджер, який всередині користується AppCompatDelegate.
      */
     private fun applyTheme(theme: AppTheme) {
-        val mode = when (theme) {
-            AppTheme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
-            AppTheme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
-        }
-        AppCompatDelegate.setDefaultNightMode(mode)
+        // Делегуємо застосування теми спільному менеджеру, щоб уникнути дублювання логіки.
+        uiSettingsManager.applyTheme(theme)
     }
 
     /**
-     * Зміна мови для поточної конфігурації. Після цього перезапускаємо активність, щоб застосувати строки.
+     * Зміна мови через менеджер; якщо локаль змінилася — перезапускаємо активність, щоб підтягнути строки.
      */
     private fun applyLanguage(language: AppLanguage) {
-        val locale = when (language) {
-            AppLanguage.UK -> Locale("uk")
-            AppLanguage.EN -> Locale.ENGLISH
+        // Менеджер повертає true, якщо локаль дійсно змінилася, і тоді Activity перезапускається.
+        val localeChanged = uiSettingsManager.applyLanguage(language)
+        if (localeChanged) {
+            recreate()
         }
-        val resources = resources
-        val configuration: Configuration = resources.configuration
-        if (configuration.locales[0] == locale) {
-            return
-        }
-        Locale.setDefault(locale)
-        configuration.setLocale(locale)
-        @Suppress("DEPRECATION")
-        resources.updateConfiguration(configuration, resources.displayMetrics)
-        recreate()
     }
 }
