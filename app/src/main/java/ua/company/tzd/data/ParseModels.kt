@@ -1,6 +1,7 @@
 package ua.company.tzd.data
 
 import java.math.BigDecimal
+import java.util.UUID
 
 /**
  * Роль поля описує, як трактувати вирізаний із штрих-коду фрагмент.
@@ -34,6 +35,25 @@ data class ParseField(
         require(length >= 1) { "Довжина поля має бути додатною" }
         require(divisor >= 1) { "Дільник має бути не меншим за 1" }
     }
+}
+
+/**
+ * Створюємо типове групувальне поле, щоб гарантувати валідність нової схеми.
+ * Використовуємо мінімальні допустимі значення (позиція 1, довжина 1, дільник 1)
+ * та випадковий ідентифікатор, щоб поле можна було відрізнити у майбутньому.
+ */
+fun createDefaultGroupField(): ParseField {
+    // Коментар для початківця: поле GROUP обов'язкове, бо без нього схема не пройде валідацію в конструкторі ParseType.
+    return ParseField(
+        id = UUID.randomUUID().toString(),
+        title = "Група",
+        start = 1,
+        length = 1,
+        role = ParseFieldRole.GROUP,
+        divisor = 1,
+        trimLeadingZeros = false,
+        unit = null
+    )
 }
 
 /**
