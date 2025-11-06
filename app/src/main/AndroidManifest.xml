@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         <activity
+            android:name="ua.company.tzd.products.ProductsActivity"
+            android:exported="false"
+            android:label="@string/products_title" />
+        <activity
+            android:name="ua.company.tzd.parsetypes.ParseTypesActivity"
+            android:exported="false"
+            android:label="@string/parse_types_title" />
+        <activity
+            android:name="ua.company.tzd.lists.ScanListsActivity"
+            android:exported="false"
+            android:label="@string/scan_lists_title" />
+        <activity
             android:name="ua.company.tzd.SettingsActivity"
             android:exported="false"
             android:label="@string/settings_title" />

@@ -1,32 +1,29 @@
 package ua.company.tzd
 
+import android.content.res.Configuration
 import android.os.Bundle
-import android.view.View
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.chip.Chip
-import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import ua.company.tzd.databinding.ActivitySettingsBinding
-import ua.company.tzd.settings.ParserConfig
+import ua.company.tzd.settings.AppLanguage
+import ua.company.tzd.settings.AppTheme
 import ua.company.tzd.settings.SettingsRepository
-import ua.company.tzd.settings.SettingsValidator
-import ua.company.tzd.util.ParserUtil
+import ua.company.tzd.settings.UiSettings
+import java.util.Locale
 
 /**
- * Екран налаштувань дозволяє змінити правила парсингу та поведінку підтвердження видалення.
+ * Новий екран "Налаштування" дозволяє змінити мову інтерфейсу та тему застосунку.
+ * Усі коментарі українською, щоб навіть новачок зрозумів логіку крок за кроком.
  */
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var repository: SettingsRepository
-    private val currentPrefixes: MutableList<String> = mutableListOf()
-    private val prefixComparator = compareBy<String> { it.length }.thenBy { it }
-    private val prefixRegex = Regex("\\d{1,13}")
+    private var currentSettings: UiSettings = UiSettings(AppLanguage.UK, AppTheme.LIGHT)
+    private var applyingUiState = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,322 +32,118 @@ class SettingsActivity : AppCompatActivity() {
 
         repository = SettingsRepository(applicationContext)
 
-        // Заздалегідь очищаємо помилки при зміні тексту, щоб користувач бачив актуальний стан.
-        listOf(
-            binding.tilArticleStart,
-            binding.tilArticleLength,
-            binding.tilKgStart,
-            binding.tilKgLength,
-            binding.tilGStart,
-            binding.tilGLength,
-            binding.tilPrefix
-        ).forEach { layout ->
-            layout.editText?.addTextChangedListener { layout.error = null }
-        }
-
-        setupPrefixSection()
+        setupToolbar()
+        setupListeners()
         observeSettings()
-        setupButtons()
     }
 
     /**
-     * Підписуємося на оновлення DataStore й оновлюємо поля форми.
+     * Верхній заголовок допомагає користувачу швидко зорієнтуватися, де він знаходиться.
+     */
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setTitle(R.string.settings_title)
+        binding.toolbar.setNavigationOnClickListener { finish() }
+    }
+
+    /**
+     * Підписуємося на DataStore, щоб миттєво реагувати на зміни налаштувань.
      */
     private fun observeSettings() {
         lifecycleScope.launch {
             repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                repository.settingsFlow.collect { state ->
-                    updateUi(state.parserConfig, state.confirmDelete, state.allowedPrefixes)
+                repository.settingsFlow.collect { settings ->
+                    currentSettings = settings
+                    applyUiState(settings)
+                    applyTheme(settings.theme)
+                    applyLanguage(settings.language)
                 }
             }
         }
     }
 
     /**
-     * Прив'язуємо обробники до кнопок збереження, скидання та тестового розбору.
+     * Задаємо слухачі для перемикачів. Коли користувач змінює значення — зберігаємо у DataStore.
      */
-    private fun setupButtons() {
-        binding.btnSave.setOnClickListener { saveSettings() }
-        binding.btnResetDefaults.setOnClickListener {
-            lifecycleScope.launch { repository.resetDefaults() }
-        }
-        binding.btnTest.setOnClickListener { runTestParsing() }
-    }
-
-    /**
-     * Готуємо блок роботи з префіксами: додавання, очищення помилок та обробку натискань.
-     */
-    private fun setupPrefixSection() {
-        binding.btnAddPrefix.setOnClickListener { addPrefixFromInput() }
-        binding.tilPrefix.editText?.setOnEditorActionListener { _, _, _ ->
-            addPrefixFromInput()
-            true
-        }
-    }
-
-    /**
-     * Заповнюємо інтерфейс значеннями, що прийшли з репозиторію.
-     */
-    private fun updateUi(config: ParserConfig, confirmDelete: Boolean, prefixes: Set<String>) {
-        // Щоб не переривати введення користувача, оновлюємо поле лише коли воно не в фокусі.
-        updateField(binding.tilArticleStart, config.articleStart)
-        updateField(binding.tilArticleLength, config.articleLength)
-        updateField(binding.tilKgStart, config.kgStart)
-        updateField(binding.tilKgLength, config.kgLength)
-        updateField(binding.tilGStart, config.gStart)
-        updateField(binding.tilGLength, config.gLength)
-        binding.swConfirmDelete.isChecked = confirmDelete
-        renderPrefixes(prefixes)
-        binding.tvTestPrefixMessage.visibility = View.GONE
-    }
-
-    private fun updateField(layout: TextInputLayout, value: Int) {
-        val edit = layout.editText ?: return
-        if (!edit.hasFocus()) {
-            val newText = value.toString()
-            if (edit.text?.toString() != newText) {
-                edit.setText(newText)
+    private fun setupListeners() {
+        binding.radioLanguage.setOnCheckedChangeListener { _, checkedId ->
+            if (applyingUiState) return@setOnCheckedChangeListener
+            val language = when (checkedId) {
+                R.id.radio_language_uk -> AppLanguage.UK
+                R.id.radio_language_en -> AppLanguage.EN
+                else -> currentSettings.language
             }
+            saveSettings(currentSettings.copy(language = language))
         }
-    }
-
-    /**
-     * Оновлюємо розділ з префіксами після отримання даних із DataStore.
-     */
-    private fun renderPrefixes(prefixes: Set<String>) {
-        currentPrefixes.clear()
-        currentPrefixes.addAll(prefixes.sortedWith(prefixComparator))
-        refreshPrefixChips()
-        binding.tilPrefix.error = null
-        binding.etPrefix.text?.clear()
-    }
-
-    /**
-     * Створюємо чіпи для кожного префікса та показуємо інформаційне повідомлення, якщо список порожній.
-     */
-    private fun refreshPrefixChips() {
-        binding.chipGroupPrefixes.removeAllViews()
-        currentPrefixes.forEach { prefix ->
-            binding.chipGroupPrefixes.addView(createPrefixChip(prefix))
-        }
-        binding.tvPrefixesEmpty.visibility = if (currentPrefixes.isEmpty()) View.VISIBLE else View.GONE
-    }
-
-    /**
-     * Формуємо чіп із префіксом та навішуємо обробники на торкання та іконку видалення.
-     */
-    private fun createPrefixChip(prefix: String): Chip {
-        return Chip(this).apply {
-            text = prefix
-            isCloseIconVisible = true
-            isCheckable = false
-            setOnCloseIconClickListener { confirmRemovePrefix(prefix) }
-            setOnClickListener { confirmRemovePrefix(prefix) }
-        }
-    }
-
-    /**
-     * Після підтвердження видаляємо префікс зі списку й оновлюємо чіпи на екрані.
-     */
-    private fun confirmRemovePrefix(prefix: String) {
-        AlertDialog.Builder(this)
-            .setMessage(getString(R.string.settings_prefix_remove, prefix))
-            .setPositiveButton(R.string.action_delete) { _, _ ->
-                currentPrefixes.remove(prefix)
-                refreshPrefixChips()
+        binding.radioTheme.setOnCheckedChangeListener { _, checkedId ->
+            if (applyingUiState) return@setOnCheckedChangeListener
+            val theme = when (checkedId) {
+                R.id.radio_theme_light -> AppTheme.LIGHT
+                R.id.radio_theme_dark -> AppTheme.DARK
+                else -> currentSettings.theme
             }
-            .setNegativeButton(R.string.action_cancel, null)
-            .show()
+            saveSettings(currentSettings.copy(theme = theme))
+        }
     }
 
     /**
-     * Зчитуємо введене значення, нормалізуємо його та додаємо до списку, якщо пройшло валідацію.
+     * Застосовуємо стан у UI без виклику зайвих колбеків (applyingUiState = true).
      */
-    private fun addPrefixFromInput() {
-        val raw = binding.etPrefix.text?.toString().orEmpty()
-        val compact = raw.filterNot { it.isWhitespace() }
-        if (compact.isEmpty() || !compact.matches(prefixRegex)) {
-            binding.tilPrefix.error = getString(R.string.settings_prefix_invalid)
-            return
-        }
-        if (currentPrefixes.contains(compact)) {
-            binding.tilPrefix.error = getString(R.string.settings_prefix_exists)
-            return
-        }
-        currentPrefixes.add(compact)
-        currentPrefixes.sortWith(prefixComparator)
-        binding.etPrefix.text?.clear()
-        binding.tilPrefix.error = null
-        refreshPrefixChips()
-    }
-
-    /**
-     * Зчитуємо значення з форми, проводимо валідацію та зберігаємо у DataStore.
-     */
-    private fun saveSettings() {
-        clearErrors()
-        val config = ParserConfig(
-            articleStart = binding.tilArticleStart.parseIntOrError(),
-            articleLength = binding.tilArticleLength.parseIntOrError(),
-            kgStart = binding.tilKgStart.parseIntOrError(),
-            kgLength = binding.tilKgLength.parseIntOrError(),
-            gStart = binding.tilGStart.parseIntOrError(),
-            gLength = binding.tilGLength.parseIntOrError()
+    private fun applyUiState(settings: UiSettings) {
+        applyingUiState = true
+        binding.radioLanguage.check(
+            when (settings.language) {
+                AppLanguage.UK -> R.id.radio_language_uk
+                AppLanguage.EN -> R.id.radio_language_en
+            }
         )
+        binding.radioTheme.check(
+            when (settings.theme) {
+                AppTheme.LIGHT -> R.id.radio_theme_light
+                AppTheme.DARK -> R.id.radio_theme_dark
+            }
+        )
+        applyingUiState = false
+    }
 
-        if (config.containsNulls()) {
-            return
-        }
-
-        if (markRangeErrors(config)) {
-            Toast.makeText(this, R.string.error_out_of_bounds, Toast.LENGTH_LONG).show()
-            return
-        }
-
-        if (!SettingsValidator.isValid(config)) {
-            showOverlapErrors()
-            Toast.makeText(this, R.string.error_ranges_overlap, Toast.LENGTH_LONG).show()
-            return
-        }
-
+    /**
+     * Окремий метод для збереження, щоб не дублювати запуск корутини.
+     */
+    private fun saveSettings(settings: UiSettings) {
         lifecycleScope.launch {
-            repository.saveSettings(config, binding.swConfirmDelete.isChecked, currentPrefixes.toSet())
-            Toast.makeText(this@SettingsActivity, R.string.saved_ok, Toast.LENGTH_SHORT).show()
+            repository.save(settings)
         }
     }
 
     /**
-     * Пояснюємо користувачу, які поля спричинили помилку, щоб він міг швидко виправити значення.
+     * Застосовуємо тему через стандартний AppCompatDelegate.
      */
-    private fun showOverlapErrors() {
-        val resources = listOf(
-            binding.tilArticleStart,
-            binding.tilArticleLength,
-            binding.tilKgStart,
-            binding.tilKgLength,
-            binding.tilGStart,
-            binding.tilGLength
-        )
-        resources.forEach { layout ->
-            if (layout.error.isNullOrEmpty()) {
-                layout.error = getString(R.string.error_ranges_overlap)
-            }
+    private fun applyTheme(theme: AppTheme) {
+        val mode = when (theme) {
+            AppTheme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+            AppTheme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
         }
-    }
-
-    private fun clearErrors() {
-        listOf(
-            binding.tilArticleStart,
-            binding.tilArticleLength,
-            binding.tilKgStart,
-            binding.tilKgLength,
-            binding.tilGStart,
-            binding.tilGLength,
-            binding.tilPrefix
-        ).forEach { it.error = null }
-        binding.tvTestPrefixMessage.visibility = View.GONE
+        AppCompatDelegate.setDefaultNightMode(mode)
     }
 
     /**
-     * Перевіряємо, чи не виходять діапазони за межі штрих-коду, і підсвічуємо помилки.
+     * Зміна мови для поточної конфігурації. Після цього перезапускаємо активність, щоб застосувати строки.
      */
-    private fun markRangeErrors(config: ParserConfig): Boolean {
-        var hasError = false
-        if (!SettingsValidator.isRangeValid(config.articleStart, config.articleLength)) {
-            binding.tilArticleStart.error = getString(R.string.error_out_of_bounds)
-            binding.tilArticleLength.error = getString(R.string.error_out_of_bounds)
-            hasError = true
+    private fun applyLanguage(language: AppLanguage) {
+        val locale = when (language) {
+            AppLanguage.UK -> Locale("uk")
+            AppLanguage.EN -> Locale.ENGLISH
         }
-        if (!SettingsValidator.isRangeValid(config.kgStart, config.kgLength)) {
-            binding.tilKgStart.error = getString(R.string.error_out_of_bounds)
-            binding.tilKgLength.error = getString(R.string.error_out_of_bounds)
-            hasError = true
-        }
-        if (!SettingsValidator.isRangeValid(config.gStart, config.gLength)) {
-            binding.tilGStart.error = getString(R.string.error_out_of_bounds)
-            binding.tilGLength.error = getString(R.string.error_out_of_bounds)
-            hasError = true
-        }
-        return hasError
-    }
-
-    /**
-     * Дозволяємо швидко перевірити, як саме буде розібрано тестовий код.
-     */
-    private fun runTestParsing() {
-        clearErrors()
-        val code = binding.etTestCode.text?.toString().orEmpty()
-        val config = ParserConfig(
-            articleStart = binding.tilArticleStart.parseIntOrError(),
-            articleLength = binding.tilArticleLength.parseIntOrError(),
-            kgStart = binding.tilKgStart.parseIntOrError(),
-            kgLength = binding.tilKgLength.parseIntOrError(),
-            gStart = binding.tilGStart.parseIntOrError(),
-            gLength = binding.tilGLength.parseIntOrError()
-        )
-        if (config.containsNulls()) {
-            Toast.makeText(this, R.string.error_out_of_bounds, Toast.LENGTH_SHORT).show()
+        val resources = resources
+        val configuration: Configuration = resources.configuration
+        if (configuration.locales[0] == locale) {
             return
         }
-        if (markRangeErrors(config)) {
-            Toast.makeText(this, R.string.error_out_of_bounds, Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!SettingsValidator.isValid(config)) {
-            Toast.makeText(this, R.string.error_ranges_overlap, Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (code.isEmpty()) {
-            Toast.makeText(this, R.string.test_code_empty, Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!ParserUtil.isValidEan13(code)) {
-            Toast.makeText(this, R.string.error_no_barcode, Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!isCodeAllowedByPrefixes(code)) {
-            val sorted = currentPrefixes.sortedWith(prefixComparator)
-            binding.tvTestPrefixMessage.text = getString(R.string.settings_prefix_not_allowed, code, sorted.joinToString(", "))
-            binding.tvTestPrefixMessage.visibility = View.VISIBLE
-            return
-        }
-        try {
-            val (article, kg, g) = ParserUtil.extractArticleKgG(code, config)
-            val message = getString(R.string.test_code_result_fmt, article, kg, g)
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        } catch (ex: IllegalArgumentException) {
-            Toast.makeText(this, getString(R.string.test_code_error, ex.message), Toast.LENGTH_LONG).show()
-        }
-    }
-
-    /**
-     * Перевіряємо фільтр префіксів для тестового коду: порожній список означає «дозволити все».
-     */
-    private fun isCodeAllowedByPrefixes(code: String): Boolean {
-        if (currentPrefixes.isEmpty()) {
-            return true
-        }
-        return currentPrefixes.any { prefix -> code.startsWith(prefix) }
-    }
-
-    /**
-     * Розширення для зручного читання числа з TextInputLayout.
-     */
-    private fun TextInputLayout.parseIntOrError(): Int {
-        val text = editText?.text?.toString()?.trim().orEmpty()
-        val number = text.toIntOrNull()
-        if (number == null) {
-            error = getString(R.string.error_number_required)
-            return NULL_MARKER
-        }
-        return number
-    }
-
-    private fun ParserConfig.containsNulls(): Boolean {
-        return listOf(articleStart, articleLength, kgStart, kgLength, gStart, gLength).any { it == NULL_MARKER }
-    }
-
-    companion object {
-        private const val NULL_MARKER = -1
+        Locale.setDefault(locale)
+        configuration.setLocale(locale)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+        recreate()
     }
 }

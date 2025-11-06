@@ -17,21 +17,41 @@
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
         android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btnGoScan"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGoScanLists"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:minHeight="56dp"
-        android:text="@string/home_scan"
+        android:text="@string/home_scan_lists"
         android:textAllCaps="false" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGoProducts"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:minHeight="56dp"
+        android:text="@string/home_products"
+        android:textAllCaps="false" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGoParseTypes"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:minHeight="56dp"
+        android:text="@string/home_parse_types"
+        android:textAllCaps="false" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnGoSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
         android:text="@string/home_settings"
         android:textAllCaps="false" />
-
 </LinearLayout>
