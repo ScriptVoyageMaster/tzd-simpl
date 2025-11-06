@@ -1,6 +1,26 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     id 'com.android.application' version '8.6.1' apply false
     id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+}
+
+// Централізовано налаштовуємо використання JDK 17 для всіх Java-задач Gradle, щоб вони запускались через керований Gradle
+// тулчейн навіть на машинах, де вказаний лише JRE без компілятора javac. Це дозволяє уникнути падіння задачі
+// :app:compileDebugJavaWithJavac через відсутність необхідної можливості JAVA_COMPILER.
+allprojects {
+    tasks.withType(JavaCompile).configureEach { JavaCompile javaTask ->
+        javaTask.javaCompiler = javaToolchains.compilerFor {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    // Для Kotlin-компілятора також примусово запитуємо JDK 17 із тулчейну, щоб Kotlin та Java використовували один і той самий JDK.
+    plugins.withId('org.jetbrains.kotlin.android') {
+        extensions.configure(org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension) { kotlinExtension ->
+            kotlinExtension.jvmToolchain(17)
+        }
+    }
 }
 
 task clean(type: Delete) {
