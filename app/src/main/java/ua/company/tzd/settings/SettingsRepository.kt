@@ -17,7 +17,7 @@ import java.io.IOException
 class SettingsRepository(private val context: Context) {
 
     companion object {
-        private const val DATASTORE_NAME = "ui_settings"
+        const val DATASTORE_NAME = "ui_settings"
         private val KEY_LANGUAGE = stringPreferencesKey("ui.language")
         private val KEY_THEME = stringPreferencesKey("ui.theme")
     }
