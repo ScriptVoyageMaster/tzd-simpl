@@ -48,11 +48,12 @@ class ParseTypeRepository(
      */
     fun newParseType(name: String): ParseType {
         val timestamp = System.currentTimeMillis()
+        // Коментар для початківця: одразу додаємо мінімальне поле GROUP, щоб нова схема відповідала вимогам конструктора ParseType.
         return ParseType(
             id = UUID.randomUUID().toString(),
             name = name,
             prefixes = emptyList(),
-            fields = emptyList(),
+            fields = listOf(createDefaultGroupField()),
             createdAt = timestamp,
             updatedAt = timestamp
         )
