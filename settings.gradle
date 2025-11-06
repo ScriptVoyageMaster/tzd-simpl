@@ -1,3 +1,10 @@
+// Підключаємо плагін автоматичного підбору JDK через сервіс Foojay, щоб Gradle міг самостійно завантажити повноцінний JDK із підтримкою
+// компілятора javac, навіть якщо в системі користувача налаштовано лише JRE. Це усуває помилки на кшталт
+// "Toolchain installation ... does not provide the required capabilities: [JAVA_COMPILER]".
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
 // Додаємо секцію pluginManagement, щоб вказати Gradle де шукати плагіни Android та уникнути помилок під час збірки.
 pluginManagement {
     repositories {
