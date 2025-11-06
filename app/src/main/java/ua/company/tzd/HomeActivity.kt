@@ -4,9 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import ua.company.tzd.databinding.ActivityHomeBinding
+import ua.company.tzd.lists.ScanListsActivity
+import ua.company.tzd.parsetypes.ParseTypesActivity
+import ua.company.tzd.products.ProductsActivity
 
 /**
- * Проста стартова активність показує дві великі кнопки для переходу на потрібний екран.
+ * Оновлене головне меню з чотирма розділами: списки, товари, види парсингу та налаштування.
  */
 class HomeActivity : AppCompatActivity() {
 
@@ -17,12 +20,16 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Встановлюємо заголовок вікна, щоб користувач розумів, де перебуває.
         title = getString(R.string.home_title)
 
-        // Підписуємо кнопки на відповідні переходи.
-        binding.btnGoScan.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+        binding.btnGoScanLists.setOnClickListener {
+            startActivity(Intent(this, ScanListsActivity::class.java))
+        }
+        binding.btnGoProducts.setOnClickListener {
+            startActivity(Intent(this, ProductsActivity::class.java))
+        }
+        binding.btnGoParseTypes.setOnClickListener {
+            startActivity(Intent(this, ParseTypesActivity::class.java))
         }
         binding.btnGoSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
