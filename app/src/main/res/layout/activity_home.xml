@@ -21,9 +21,18 @@
         android:id="@+id/btnGoScan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         android:minHeight="56dp"
         android:text="@string/home_scan"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/btnGoScanLists"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:minHeight="56dp"
+        android:text="@string/home_scan_lists"
         android:textAllCaps="false" />
 
     <Button

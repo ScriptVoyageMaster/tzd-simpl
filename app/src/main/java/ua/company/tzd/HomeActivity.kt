@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import ua.company.tzd.databinding.ActivityHomeBinding
 
 /**
- * Проста стартова активність показує дві великі кнопки для переходу на потрібний екран.
+ * Проста стартова активність показує три великі кнопки для переходу на потрібний екран.
  */
 class HomeActivity : AppCompatActivity() {
 
@@ -23,6 +23,10 @@ class HomeActivity : AppCompatActivity() {
         // Підписуємо кнопки на відповідні переходи.
         binding.btnGoScan.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
+        }
+        binding.btnGoScanLists.setOnClickListener {
+            // Відкриваємо новий екран керування списками сканування.
+            startActivity(Intent(this, ScanListsActivity::class.java))
         }
         binding.btnGoSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
