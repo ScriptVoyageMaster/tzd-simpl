@@ -4,7 +4,21 @@
     <!-- Home -->
     <string name="home_title">Main menu</string>
     <string name="home_scan">Scan</string>
+    <string name="home_scan_lists">Scan lists</string>
     <string name="home_settings">Settings</string>
+
+    <!-- Scan lists -->
+    <string name="scan_lists_title">Scan lists</string>
+    <string name="scan_lists_create">+ Create list</string>
+    <string name="scan_lists_empty">No lists yet. Create the first one.</string>
+    <string name="scan_lists_create_title">New list</string>
+    <string name="scan_lists_name_hint">List name</string>
+    <string name="scan_lists_name_error">Name must contain 1 to 60 characters</string>
+    <string name="scan_lists_delete_title">Delete list</string>
+    <string name="scan_lists_delete_msg">Delete list "%1$s"? Saved scans for this list will be removed.</string>
+    <string name="scan_lists_open_cd">Open list %1$s</string>
+    <string name="scan_lists_not_found">List is missing. Returning to Scan lists.</string>
+    <string name="scan_list_session_title">List: %1$s</string>
 
     <!-- Main -->
     <string name="btn_scan">Scan</string>

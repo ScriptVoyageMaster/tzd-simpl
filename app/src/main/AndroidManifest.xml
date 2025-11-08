@@ -16,6 +16,13 @@
             android:exported="false"
             android:label="@string/settings_title" />
         <activity
+            android:name="ua.company.tzd.ScanListsActivity"
+            android:exported="false"
+            android:label="@string/scan_lists_title" />
+        <activity
+            android:name="ua.company.tzd.scanlists.ScanListSessionActivity"
+            android:exported="false" />
+        <activity
             android:name="ua.company.tzd.MainActivity"
             android:exported="false" />
         <activity
