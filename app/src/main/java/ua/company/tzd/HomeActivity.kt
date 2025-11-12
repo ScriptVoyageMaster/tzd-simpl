@@ -2,13 +2,13 @@ package ua.company.tzd
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import ua.company.tzd.localization.LocalizedActivity
 import ua.company.tzd.databinding.ActivityHomeBinding
 
 /**
  * Проста стартова активність показує три великі кнопки для переходу на потрібний екран.
  */
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityHomeBinding
 

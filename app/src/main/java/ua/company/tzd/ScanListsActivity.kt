@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,12 +16,13 @@ import ua.company.tzd.model.ScanListInfo
 import ua.company.tzd.scanlists.ScanListSessionActivity
 import ua.company.tzd.scanlists.ScanListsAdapter
 import ua.company.tzd.scanlists.ScanListsRepository
+import ua.company.tzd.localization.LocalizedActivity
 
 /**
  * Екран керування списками зберігає та показує назви для довготривалих сесій сканування.
  * Тут можна створити новий список, видалити його та перейти до режиму сканування.
  */
-class ScanListsActivity : AppCompatActivity() {
+class ScanListsActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityScanListsBinding
     private lateinit var repository: ScanListsRepository

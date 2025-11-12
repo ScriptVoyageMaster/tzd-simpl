@@ -13,6 +13,42 @@
         android:padding="24dp">
 
         <TextView
+            android:id="@+id/tvInterfaceSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="@string/pref_interface_section"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+
+        <TextView
+            android:id="@+id/tvLanguageLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/pref_language_title"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+        <RadioGroup
+            android:id="@+id/rgLanguage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/rbLanguageUk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pref_language_uk" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/rbLanguageEn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pref_language_en" />
+        </RadioGroup>
+
+        <TextView
             android:id="@+id/tvParserSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

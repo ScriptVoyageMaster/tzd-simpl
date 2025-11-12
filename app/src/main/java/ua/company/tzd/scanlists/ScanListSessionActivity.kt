@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,6 +17,7 @@ import kotlinx.coroutines.launch
 import ua.company.tzd.R
 import ua.company.tzd.ScanActivity
 import ua.company.tzd.databinding.ActivityMainBinding
+import ua.company.tzd.localization.LocalizedActivity
 import ua.company.tzd.model.ScannedItem
 import ua.company.tzd.settings.ParserConfig
 import ua.company.tzd.settings.SettingsRepository
@@ -29,7 +29,7 @@ import ua.company.tzd.util.TotalsUtil
 /**
  * Екран повторює стандартний режим сканування, але всі дані одразу пишуться в обраний список.
  */
-class ScanListSessionActivity : AppCompatActivity() {
+class ScanListSessionActivity : LocalizedActivity() {
 
     companion object {
         const val EXTRA_LIST_ID = "ua.company.tzd.scanlists.EXTRA_LIST_ID"
