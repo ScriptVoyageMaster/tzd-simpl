@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -148,8 +147,3 @@ class SettingsRepository(private val context: Context) {
  * Локальна функція-обгортка над Preferences.empty(), щоб уникнути імпорту в класі.
  */
 private fun emptyPreferences(): Preferences = androidx.datastore.preferences.core.emptyPreferences()
-
-/**
- * Створюємо lazy DataStore, що прив'язаний до контексту застосунку.
- */
-private val Context.settingsDataStore by preferencesDataStore(name = SettingsRepository.DATASTORE_NAME)

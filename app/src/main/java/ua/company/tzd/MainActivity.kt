@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import ua.company.tzd.databinding.ActivityMainBinding
+import ua.company.tzd.localization.LocalizedActivity
 import ua.company.tzd.model.ScannedItem
 import ua.company.tzd.settings.ParserConfig
 import ua.company.tzd.settings.SettingsRepository
@@ -27,7 +27,7 @@ import ua.company.tzd.util.TotalsUtil
  * Основний екран для сканування кодів та перегляду поточних підсумків.
  * Коментарі пояснюють кожен крок, щоб навіть новачок розібрався в логіці.
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : LocalizedActivity() {
 
     // ViewBinding надає доступ до елементів розмітки без пошуку за ідентифікатором.
     private lateinit var binding: ActivityMainBinding

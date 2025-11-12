@@ -2,19 +2,19 @@ package ua.company.tzd
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CompoundBarcodeView
 import com.journeyapps.barcodescanner.DefaultDecoderFactory
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import ua.company.tzd.databinding.ActivityScanBinding
+import ua.company.tzd.localization.LocalizedActivity
 
 /**
  * Екран сканування, що використовує бібліотеку ZXing Embedded для швидкого пошуку EAN-13.
  * Детальні коментарі допомагають зрозуміти послідовність дій у коді.
  */
-class ScanActivity : AppCompatActivity(), DecoratedBarcodeView.TorchListener {
+class ScanActivity : LocalizedActivity(), DecoratedBarcodeView.TorchListener {
 
     companion object {
         const val EXTRA_BARCODE = "ua.company.tzd.EXTRA_BARCODE"

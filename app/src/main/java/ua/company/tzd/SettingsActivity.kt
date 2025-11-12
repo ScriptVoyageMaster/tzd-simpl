@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -12,6 +11,8 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import ua.company.tzd.databinding.ActivitySettingsBinding
+import ua.company.tzd.localization.LocalizedActivity
+import ua.company.tzd.localization.LocaleManager
 import ua.company.tzd.settings.ParserConfig
 import ua.company.tzd.settings.SettingsRepository
 import ua.company.tzd.settings.SettingsValidator
@@ -20,13 +21,14 @@ import ua.company.tzd.util.ParserUtil
 /**
  * Екран налаштувань дозволяє змінити правила парсингу та поведінку підтвердження видалення.
  */
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var repository: SettingsRepository
     private val currentPrefixes: MutableList<String> = mutableListOf()
     private val prefixComparator = compareBy<String> { it.length }.thenBy { it }
     private val prefixRegex = Regex("\\d{1,13}")
+    private var suppressLanguageListener = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +36,9 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         repository = SettingsRepository(applicationContext)
+
+        // Встановлюємо заголовок активності відповідно до локалізованого ресурсу.
+        title = getString(R.string.settings_title)
 
         // Заздалегідь очищаємо помилки при зміні тексту, щоб користувач бачив актуальний стан.
         listOf(
@@ -48,6 +53,7 @@ class SettingsActivity : AppCompatActivity() {
             layout.editText?.addTextChangedListener { layout.error = null }
         }
 
+        setupLanguageSection()
         setupPrefixSection()
         observeSettings()
         setupButtons()
@@ -85,6 +91,46 @@ class SettingsActivity : AppCompatActivity() {
         binding.tilPrefix.editText?.setOnEditorActionListener { _, _, _ ->
             addPrefixFromInput()
             true
+        }
+    }
+
+    /**
+     * Готуємо перемикач мови: слухаємо вибір користувача та реагуємо на зміни у DataStore.
+     */
+    private fun setupLanguageSection() {
+        binding.rgLanguage.setOnCheckedChangeListener { _, checkedId ->
+            if (suppressLanguageListener) {
+                return@setOnCheckedChangeListener
+            }
+            val selectedLanguage = when (checkedId) {
+                binding.rbLanguageUk.id -> LocaleManager.LANGUAGE_UK
+                binding.rbLanguageEn.id -> LocaleManager.LANGUAGE_EN
+                else -> return@setOnCheckedChangeListener
+            }
+            lifecycleScope.launch {
+                val current = LocaleManager.getLanguage(applicationContext)
+                if (current != selectedLanguage) {
+                    // Зберігаємо нову мову та одразу перезавантажуємо екран, щоб тексти оновилися миттєво.
+                    LocaleManager.setLanguage(applicationContext, selectedLanguage)
+                    recreate()
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                LocaleManager.languageFlow(applicationContext).collect { language ->
+                    val targetId = when (language) {
+                        LocaleManager.LANGUAGE_EN -> binding.rbLanguageEn.id
+                        else -> binding.rbLanguageUk.id
+                    }
+                    if (binding.rgLanguage.checkedRadioButtonId != targetId) {
+                        suppressLanguageListener = true
+                        binding.rgLanguage.check(targetId)
+                        suppressLanguageListener = false
+                    }
+                }
+            }
         }
     }
 
@@ -319,7 +365,7 @@ class SettingsActivity : AppCompatActivity() {
             val message = getString(R.string.test_code_result_fmt, article, kg, g)
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         } catch (ex: IllegalArgumentException) {
-            Toast.makeText(this, getString(R.string.test_code_error, ex.message), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.test_code_error, Toast.LENGTH_LONG).show()
         }
     }
 

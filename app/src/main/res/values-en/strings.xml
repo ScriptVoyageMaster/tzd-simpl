@@ -1,0 +1,81 @@
+<resources>
+    <string name="app_name">TZD Simple</string>
+
+    <!-- Home -->
+    <string name="home_title">Main menu</string>
+    <string name="home_scan">Scan</string>
+    <string name="home_scan_lists">Scan lists</string>
+    <string name="home_settings">Settings</string>
+
+    <!-- Scan lists -->
+    <string name="scan_lists_title">Scan lists</string>
+    <string name="scan_lists_create">+ Create list</string>
+    <string name="scan_lists_empty">No lists yet. Create the first one.</string>
+    <string name="scan_lists_create_title">New list</string>
+    <string name="scan_lists_name_hint">List name</string>
+    <string name="scan_lists_name_error">Name must contain 1 to 60 characters</string>
+    <string name="scan_lists_delete_title">Delete list</string>
+    <string name="scan_lists_delete_msg">Delete list "%1$s"? Saved scans for this list will be removed.</string>
+    <string name="scan_lists_open_cd">Open list %1$s</string>
+    <string name="scan_lists_not_found">List is missing. Returning to Scan lists.</string>
+    <string name="scan_list_session_title">List: %1$s</string>
+
+    <!-- Main -->
+    <string name="btn_scan">Scan</string>
+    <string name="btn_clear">Clear</string>
+    <string name="summary_header">Article summary</string>
+    <string name="empty_list_message">No codes yet</string>
+    <string name="summary_row_fmt">Article %1$s — %2$d pcs — %3$d kg %4$d g</string>
+    <string name="grand_total_fmt">Total: %1$d pcs — %2$d kg %3$d g</string>
+    <string name="item_weight_fmt">%1$d kg %2$d g</string>
+    <string name="delete_item_title">Delete item</string>
+    <string name="delete_item_msg">Remove code %1$s?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="clear_all_title">Clear list</string>
+    <string name="clear_all_msg">Are you sure you want to delete all scanned items?</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Parser settings</string>
+    <string name="pref_interface_section">Interface</string>
+    <string name="pref_language_title">Application language</string>
+    <string name="pref_language_uk">Ukrainian</string>
+    <string name="pref_language_en">English</string>
+    <string name="settings_parser_section">EAN-13 parser</string>
+    <string name="settings_prefixes_section">Allowed prefixes</string>
+    <string name="settings_prefix_hint">Enter prefix (1–13 digits)</string>
+    <string name="settings_prefix_add">Add</string>
+    <string name="settings_prefix_empty">No prefixes set — any EAN-13 is allowed</string>
+    <string name="settings_prefix_exists">This prefix is already added</string>
+    <string name="settings_prefix_invalid">Prefix must contain 1–13 digits only</string>
+    <string name="settings_prefix_remove">Remove prefix %1$s?</string>
+    <string name="settings_prefix_not_allowed">Code %1$s does not start with any allowed prefix: %2$s</string>
+    <string name="field_start">Start</string>
+    <string name="field_length">Length</string>
+    <string name="field_article">Article</string>
+    <string name="field_kilograms">Kilograms</string>
+    <string name="field_grams">Grams</string>
+    <string name="confirm_delete">Confirm deletion</string>
+    <string name="save">Save</string>
+    <string name="reset_defaults">Reset defaults</string>
+    <string name="test_code">Test code</string>
+    <string name="test">Test</string>
+    <string name="error_ranges_overlap">Ranges intersect or exceed barcode length</string>
+    <string name="error_out_of_bounds">Value must keep ranges inside 13 digits</string>
+    <string name="error_number_required">Enter a number</string>
+    <string name="saved_ok">Settings saved</string>
+    <string name="test_code_empty">Enter test code</string>
+    <string name="test_code_result_fmt">Article %1$s — %2$d kg %3$d g</string>
+    <string name="test_code_error">Parsing failed with the current configuration</string>
+
+    <!-- Shared -->
+    <string name="hint_hold_steady">Hold steady 15–25 cm from the code.</string>
+    <string name="torch_on">Torch ON</string>
+    <string name="torch_off">Torch OFF</string>
+    <string name="permission_camera_rationale">Camera permission is needed to scan barcodes.</string>
+    <string name="error_no_barcode">Invalid barcode</string>
+    <string name="error_permission_denied">Camera permission denied</string>
+    <string name="invalid_prefix_title">Invalid prefix</string>
+    <string name="invalid_prefix_msg">Code %1$s does not start with any allowed prefix: %2$s</string>
+    <string name="action_rescan">Rescan</string>
+</resources>
