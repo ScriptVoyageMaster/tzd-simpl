@@ -65,7 +65,15 @@ object LocaleManager {
      */
     fun getLanguageSync(context: Context): String {
         cachedLanguage?.let { return it }
-        val normalized = runBlocking { getLanguage(context) }
+
+        val appContext = context.applicationContext
+        if (appContext == null) {
+            // Якщо applicationContext ще недоступний (наприклад, під час attachBaseContext), то DataStore не готовий.
+            // У такій ситуації повертаємо кеш або стандартну мову, щоб уникнути краху через звернення до DataStore.
+            return cachedLanguage ?: DEFAULT_LANGUAGE
+        }
+
+        val normalized = runBlocking { getLanguage(appContext) }
         cachedLanguage = normalized
         return normalized
     }
